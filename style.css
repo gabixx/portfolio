@@ -788,3 +788,21 @@ body {
     opacity: 0.95;
   }
 }
+@media (max-width: 680px) {
+  .card-btn span,
+  .project-arrow {
+    font-family: "Poppins", system-ui, -apple-system, sans-serif;
+  }
+
+  .card-btn span::before {
+    content: "\2197\FE0E"; /* ↗ forçado como texto */
+  }
+
+  .card-btn span {
+    font-size: 0; /* esconde o caractere original */
+  }
+
+  .card-btn span::before {
+    font-size: 16px; /* volta o tamanho só no pseudo */
+  }
+}
