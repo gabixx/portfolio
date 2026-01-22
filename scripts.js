@@ -103,16 +103,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // validações
   function validateName() {
     const v = inputs.name.value.trim();
-    if (!v) return setError(inputs.name, "Informe seu nome"), false;
+    if (!v) return (setError(inputs.name, "Informe seu nome"), false);
     clearError(inputs.name);
     return true;
   }
 
   function validateEmail() {
     const v = inputs.email.value.trim();
-    if (!v) return setError(inputs.email, "Informe seu e-mail"), false;
+    if (!v) return (setError(inputs.email, "Informe seu e-mail"), false);
     if (!emailRegex.test(v))
-      return setError(inputs.email, "Digite um e-mail válido"), false;
+      return (setError(inputs.email, "Digite um e-mail válido"), false);
 
     clearError(inputs.email);
     return true;
@@ -123,10 +123,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const digits = v.replace(/\D/g, "");
 
     // TELEFONE OBRIGATÓRIO (com DDD)
-    if (!v) return setError(inputs.phone, "Informe seu telefone"), false;
+    if (!v) return (setError(inputs.phone, "Informe seu telefone"), false);
     if (digits.length < 10)
       return (
-        setError(inputs.phone, "Digite um telefone válido (com DDD)"), false
+        setError(inputs.phone, "Digite um telefone válido (com DDD)"),
+        false
       );
 
     clearError(inputs.phone);
@@ -135,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function validateMessage() {
     const v = inputs.message.value.trim();
-    if (!v) return setError(inputs.message, "Digite sua mensagem"), false;
+    if (!v) return (setError(inputs.message, "Digite sua mensagem"), false);
     clearError(inputs.message);
     return true;
   }
@@ -160,12 +161,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof emailjs === "undefined") {
       setError(
         inputs.email,
-        "EmailJS não carregou. Verifique a ordem dos scripts."
+        "EmailJS não carregou. Verifique a ordem dos scripts.",
       );
       return;
     }
 
-    // valida tudo
     const ok =
       validateName() && validateEmail() && validatePhone() && validateMessage();
 
@@ -198,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // sem popup: mostra erro no campo de e-mail (pode trocar pra outro)
       setError(
         inputs.email,
-        "Não foi possível enviar agora. Tente me contatar pelas redes sociais :)."
+        "Não foi possível enviar agora. Tente me contatar pelas redes sociais :).",
       );
     }
   });
