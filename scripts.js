@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   // =========================
-  // 1) Efeito "typed-word"
+  // 1) Efeito "typed-word" (SEM sumir o retângulo verde)
   // =========================
   const el = document.getElementById("typed-word");
   if (el) {
@@ -13,13 +13,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const deleteSpeed = 100;
     const holdTime = 900;
 
+    // garante que nunca fique "vazio" (mantém o fundo verde aparecendo)
+    const setTypedText = (text) => {
+      el.textContent = text && text.length ? text : "\u00A0"; // nbsp
+    };
+
     function tick() {
       const current = words[wordIndex];
       el.classList.add("is-on");
 
       if (!isDeleting) {
         charIndex++;
-        el.textContent = current.slice(0, charIndex);
+        setTypedText(current.slice(0, charIndex));
 
         if (charIndex === current.length) {
           setTimeout(() => {
@@ -28,10 +33,11 @@ document.addEventListener("DOMContentLoaded", () => {
           }, holdTime);
           return;
         }
+
         setTimeout(tick, typeSpeed);
       } else {
         charIndex--;
-        el.textContent = current.slice(0, charIndex);
+        setTypedText(current.slice(0, charIndex));
 
         if (charIndex <= 0) {
           isDeleting = false;
@@ -44,11 +50,16 @@ document.addEventListener("DOMContentLoaded", () => {
           }, 120);
           return;
         }
+
         setTimeout(tick, deleteSpeed);
       }
     }
 
     el.classList.remove("is-on");
+    // inicia já com o "bloco" ocupando espaço
+    setTypedText(words[0].slice(0, 1));
+    charIndex = 1;
+
     setTimeout(() => {
       el.classList.add("is-on");
       tick();
@@ -61,145 +72,205 @@ document.addEventListener("DOMContentLoaded", () => {
   //    - telefone obrigatório
   // =========================
   const form = document.getElementById("contact-form");
-  if (!form) return;
+  if (form) {
+    const button = form.querySelector(".btn-submit");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const button = form.querySelector(".btn-submit");
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const getInput = (name) => form.querySelector(`[name="${name}"]`);
 
-  const getInput = (name) => form.querySelector(`[name="${name}"]`);
+    const inputs = {
+      name: getInput("from_name"),
+      email: getInput("reply_to"),
+      phone: getInput("phone"),
+      message: getInput("message"),
+    };
 
-  const inputs = {
-    name: getInput("from_name"),
-    email: getInput("reply_to"),
-    phone: getInput("phone"),
-    message: getInput("message"),
-  };
-
-  // helper: pega o .error-text logo após o input (se existir)
-  function getErrorEl(input) {
-    const el = input?.nextElementSibling;
-    return el && el.classList.contains("error-text") ? el : null;
-  }
-
-  function setError(input, message) {
-    if (!input) return;
-    input.classList.add("input-error");
-
-    const err = getErrorEl(input);
-    if (err) {
-      err.textContent = message;
-      err.classList.add("active");
+    function getErrorEl(input) {
+      const el = input?.nextElementSibling;
+      return el && el.classList.contains("error-text") ? el : null;
     }
+
+    function setError(input, message) {
+      if (!input) return;
+      input.classList.add("input-error");
+
+      const err = getErrorEl(input);
+      if (err) {
+        err.textContent = message;
+        err.classList.add("active");
+      }
+    }
+
+    function clearError(input) {
+      if (!input) return;
+      input.classList.remove("input-error");
+
+      const err = getErrorEl(input);
+      if (err) err.classList.remove("active");
+    }
+
+    function validateName() {
+      const v = inputs.name.value.trim();
+      if (!v) return (setError(inputs.name, "Informe seu nome"), false);
+      clearError(inputs.name);
+      return true;
+    }
+
+    function validateEmail() {
+      const v = inputs.email.value.trim();
+      if (!v) return (setError(inputs.email, "Informe seu e-mail"), false);
+      if (!emailRegex.test(v))
+        return (setError(inputs.email, "Digite um e-mail válido"), false);
+
+      clearError(inputs.email);
+      return true;
+    }
+
+    function validatePhone() {
+      const v = inputs.phone.value.trim();
+      const digits = v.replace(/\D/g, "");
+
+      if (!v) return (setError(inputs.phone, "Informe seu telefone"), false);
+      if (digits.length < 10)
+        return (
+          setError(inputs.phone, "Digite um telefone válido (com DDD)"),
+          false
+        );
+
+      clearError(inputs.phone);
+      return true;
+    }
+
+    function validateMessage() {
+      const v = inputs.message.value.trim();
+      if (!v) return (setError(inputs.message, "Digite sua mensagem"), false);
+      clearError(inputs.message);
+      return true;
+    }
+
+    Object.values(inputs).forEach((inp) => {
+      if (!inp) return;
+      inp.addEventListener("input", () => clearError(inp));
+      inp.addEventListener("blur", () => {
+        if (inp === inputs.name) validateName();
+        if (inp === inputs.email) validateEmail();
+        if (inp === inputs.phone) validatePhone();
+        if (inp === inputs.message) validateMessage();
+      });
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (typeof emailjs === "undefined") {
+        setError(
+          inputs.email,
+          "EmailJS não carregou. Verifique a ordem dos scripts.",
+        );
+        return;
+      }
+
+      const ok =
+        validateName() &&
+        validateEmail() &&
+        validatePhone() &&
+        validateMessage();
+
+      if (!ok) return;
+
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Enviando...";
+
+      try {
+        await emailjs.sendForm("service_apklcge", "template_ommunt9", form);
+
+        form.reset();
+        Object.values(inputs).forEach(clearError);
+
+        button.textContent = "Enviado ✓";
+        button.classList.add("is-success");
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+          button.classList.remove("is-success");
+        }, 2200);
+      } catch (err) {
+        console.error("Erro EmailJS:", err);
+
+        button.disabled = false;
+        button.textContent = originalText;
+
+        setError(
+          inputs.email,
+          "Não foi possível enviar agora. Tente me contatar pelas redes sociais :).",
+        );
+      }
+    });
   }
 
-  function clearError(input) {
-    if (!input) return;
-    input.classList.remove("input-error");
+  // =========================
+  // 3) Stagger + Reveal (SEM lag)
+  //    - usa IntersectionObserver (melhor performance)
+  // =========================
 
-    const err = getErrorEl(input);
-    if (err) err.classList.remove("active");
-  }
-
-  // validações
-  function validateName() {
-    const v = inputs.name.value.trim();
-    if (!v) return (setError(inputs.name, "Informe seu nome"), false);
-    clearError(inputs.name);
-    return true;
-  }
-
-  function validateEmail() {
-    const v = inputs.email.value.trim();
-    if (!v) return (setError(inputs.email, "Informe seu e-mail"), false);
-    if (!emailRegex.test(v))
-      return (setError(inputs.email, "Digite um e-mail válido"), false);
-
-    clearError(inputs.email);
-    return true;
-  }
-
-  function validatePhone() {
-    const v = inputs.phone.value.trim();
-    const digits = v.replace(/\D/g, "");
-
-    // TELEFONE OBRIGATÓRIO (com DDD)
-    if (!v) return (setError(inputs.phone, "Informe seu telefone"), false);
-    if (digits.length < 10)
-      return (
-        setError(inputs.phone, "Digite um telefone válido (com DDD)"),
-        false
-      );
-
-    clearError(inputs.phone);
-    return true;
-  }
-
-  function validateMessage() {
-    const v = inputs.message.value.trim();
-    if (!v) return (setError(inputs.message, "Digite sua mensagem"), false);
-    clearError(inputs.message);
-    return true;
-  }
-
-  // limpar erro ao digitar
-  Object.values(inputs).forEach((inp) => {
-    if (!inp) return;
-    inp.addEventListener("input", () => clearError(inp));
-    inp.addEventListener("blur", () => {
-      // valida no blur (opcional, melhora UX)
-      if (inp === inputs.name) validateName();
-      if (inp === inputs.email) validateEmail();
-      if (inp === inputs.phone) validatePhone();
-      if (inp === inputs.message) validateMessage();
+  // Stagger
+  document.querySelectorAll(".stagger").forEach((group) => {
+    group.querySelectorAll(".reveal").forEach((item, i) => {
+      item.style.setProperty("--d", `${i * 120}ms`);
     });
   });
 
-  form.addEventListener("submit", async (e) => {
+  // Reveal
+  const revealEls = document.querySelectorAll(".reveal");
+  if (revealEls.length) {
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active");
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.12,
+        rootMargin: "0px 0px -120px 0px",
+      },
+    );
+
+    revealEls.forEach((el) => observer.observe(el));
+  }
+});
+
+document.querySelectorAll('a[href*="#"]').forEach((link) => {
+  link.addEventListener("click", (e) => {
+    const hrefAttr = link.getAttribute("href");
+    if (!hrefAttr || hrefAttr === "#") return;
+
+    const url = new URL(link.href, window.location.href);
+
+    const samePage =
+      url.origin === window.location.origin &&
+      url.pathname === window.location.pathname;
+
+    if (!samePage) return;
+
+    const hash = url.hash;
+    if (!hash) return;
+
+    const target = document.querySelector(hash);
+    if (!target) return;
+
     e.preventDefault();
 
-    // garante EmailJS carregado
-    if (typeof emailjs === "undefined") {
-      setError(
-        inputs.email,
-        "EmailJS não carregou. Verifique a ordem dos scripts.",
-      );
-      return;
-    }
+    history.pushState(null, "", hash);
 
-    const ok =
-      validateName() && validateEmail() && validatePhone() && validateMessage();
+    const header = document.querySelector(".header");
+    const offset = header ? header.offsetHeight + 10 : 0;
 
-    if (!ok) return;
+    const top = target.getBoundingClientRect().top + window.scrollY - offset;
 
-    const originalText = button.textContent;
-    button.disabled = true;
-    button.textContent = "Enviando...";
-
-    try {
-      await emailjs.sendForm("service_apklcge", "template_ommunt9", form);
-
-      form.reset();
-      Object.values(inputs).forEach(clearError);
-
-      // feedback visual (sem popup)
-      button.textContent = "Enviado ✓";
-      button.classList.add("is-success"); // opcional (se quiser estilizar)
-      setTimeout(() => {
-        button.textContent = originalText;
-        button.disabled = false;
-        button.classList.remove("is-success");
-      }, 2200);
-    } catch (err) {
-      console.error("Erro EmailJS:", err);
-
-      button.disabled = false;
-      button.textContent = originalText;
-
-      // sem popup: mostra erro no campo de e-mail (pode trocar pra outro)
-      setError(
-        inputs.email,
-        "Não foi possível enviar agora. Tente me contatar pelas redes sociais :).",
-      );
-    }
+    window.scrollTo({ top, behavior: "smooth" });
   });
 });

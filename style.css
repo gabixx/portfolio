@@ -16,10 +16,6 @@
   box-sizing: border-box;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 body {
   background: var(--white);
   color: var(--black);
@@ -85,7 +81,7 @@ body {
   background-image:
     linear-gradient(to right, rgba(30, 30, 30, 0.06) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(30, 30, 30, 0.06) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-size: 64px 64px;
   background-position: 0 0;
 }
 .call-to-action::before {
@@ -257,6 +253,7 @@ body {
   font-weight: 700;
   text-decoration: none;
   color: var(--black);
+  background: var(--blue);
   border: 1px solid #262626;
   transition: all 0.2s ease;
   margin-bottom: 10px;
@@ -275,17 +272,17 @@ body {
 }
 
 .card-btn:hover {
-  background: var(--black);
-  color: var(--white);
+  background: var(--white);
+  color: var(--black);
 }
 .card {
   transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .card:hover {
-  transform: translateY(-6px);
+  transform: scale(1.02);
   box-shadow: 0 18px 40px rgba(30, 30, 30, 0.12);
 }
 
@@ -337,7 +334,7 @@ body {
 
   display: grid;
   grid-template-columns: 1.5fr 0.85fr;
-  gap: 24px;
+  gap: 67px;
   align-items: center;
 }
 
@@ -358,7 +355,6 @@ body {
   object-fit: cover;
   object-position: center 20%;
 
-  border-radius: 26px;
   box-shadow: 0 18px 50px rgba(30, 30, 30, 0.18);
   display: block;
 }
@@ -648,6 +644,28 @@ body {
 
 .error-text.active {
   display: block;
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 1s ease,
+    transform 1s ease;
+  transition-delay: var(--d, 0ms);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0ms;
+}
+.card:hover,
+.project-card:hover {
+  transition-delay: 0ms !important;
+}
+.card.reveal.active:hover {
+  transform: scale(1.015);
+  box-shadow: 0 18px 42px rgba(30, 30, 30, 0.18);
 }
 
 @media (max-width: 1100px) {
