@@ -19,6 +19,7 @@
     />
     <title>Lara Costa | WebDesigner & Developer</title>
   </head>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <body>
     <header class="header">
       <nav class="nav">
@@ -387,7 +388,10 @@
           ></textarea>
           <span class="error-text">Digite sua mensagem</span>
         </div>
-
+        <div
+          class="g-recaptcha"
+          data-sitekey="6LcTQVYsAAAAAAn_V-yVyP4hFGvbAXi1UFz9tWPO"
+        ></div>
         <button type="submit" class="btn-submit">Enviar</button>
       </form>
     </div>
@@ -400,7 +404,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
-  emailjs.init("7lqtIyUnugq0NTJAx");
+  (function () {
+    emailjs.init({
+      publicKey: "7lqtIyUnugq0NTJAx",
+    });
+  })();
 </script>
 <script src="scripts.js" defer></script>
 

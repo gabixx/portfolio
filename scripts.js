@@ -1,7 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // =========================
-  // 1) Efeito "typed-word" (SEM sumir o retângulo verde)
-  // =========================
   const el = document.getElementById("typed-word");
   if (el) {
     const words = ["convertem", "vendem", "impactam"];
@@ -13,9 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const deleteSpeed = 100;
     const holdTime = 900;
 
-    // garante que nunca fique "vazio" (mantém o fundo verde aparecendo)
     const setTypedText = (text) => {
-      el.textContent = text && text.length ? text : "\u00A0"; // nbsp
+      el.textContent = text && text.length ? text : "\u00A0";
     };
 
     function tick() {
@@ -66,11 +62,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 250);
   }
 
-  // =========================
-  // 2) Formulário EmailJS (sem popup)
-  //    - marca campo em vermelho
-  //    - telefone obrigatório
-  // =========================
   const form = document.getElementById("contact-form");
   if (form) {
     const button = form.querySelector(".btn-submit");
@@ -107,6 +98,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const err = getErrorEl(input);
       if (err) err.classList.remove("active");
+    }
+
+    function getCaptchaErrorEl() {
+      const widget = form.querySelector(".g-recaptcha");
+      if (!widget) return null;
+      const err = widget.nextElementSibling;
+      return err && err.classList.contains("error-text") ? err : null;
+    }
+
+    function setCaptchaError(message) {
+      const err = getCaptchaErrorEl();
+      if (!err) return;
+      err.textContent = message;
+      err.classList.add("active");
+    }
+
+    function clearCaptchaError() {
+      const err = getCaptchaErrorEl();
+      if (err) err.classList.remove("active");
+    }
+
+    function validateCaptcha() {
+      if (typeof grecaptcha === "undefined") return true;
+
+      const token = grecaptcha.getResponse();
+      if (!token) {
+        setCaptchaError("Confirme que você não é um robô");
+        return false;
+      }
+
+      clearCaptchaError();
+      return true;
+    }
+
+    function resetCaptcha() {
+      if (typeof grecaptcha !== "undefined") grecaptcha.reset();
+      clearCaptchaError();
     }
 
     function validateName() {
@@ -159,6 +187,17 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    const captchaWidget = form.querySelector(".g-recaptcha");
+    if (captchaWidget) {
+      captchaWidget.addEventListener("click", () => {
+        setTimeout(() => {
+          if (typeof grecaptcha !== "undefined" && grecaptcha.getResponse()) {
+            clearCaptchaError();
+          }
+        }, 200);
+      });
+    }
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -174,7 +213,8 @@ document.addEventListener("DOMContentLoaded", () => {
         validateName() &&
         validateEmail() &&
         validatePhone() &&
-        validateMessage();
+        validateMessage() &&
+        validateCaptcha();
 
       if (!ok) return;
 
@@ -183,10 +223,11 @@ document.addEventListener("DOMContentLoaded", () => {
       button.textContent = "Enviando...";
 
       try {
-        await emailjs.sendForm("service_apklcge", "template_ommunt9", form);
+        await emailjs.sendForm("service_86b7uka", "template_ommunt9", form);
 
         form.reset();
         Object.values(inputs).forEach(clearError);
+        resetCaptcha();
 
         button.textContent = "Enviado ✓";
         button.classList.add("is-success");
@@ -200,6 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         button.disabled = false;
         button.textContent = originalText;
+        resetCaptcha();
 
         setError(
           inputs.email,
@@ -209,19 +251,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // =========================
-  // 3) Stagger + Reveal (SEM lag)
-  //    - usa IntersectionObserver (melhor performance)
-  // =========================
-
-  // Stagger
   document.querySelectorAll(".stagger").forEach((group) => {
     group.querySelectorAll(".reveal").forEach((item, i) => {
       item.style.setProperty("--d", `${i * 120}ms`);
     });
   });
 
-  // Reveal
   const revealEls = document.querySelectorAll(".reveal");
   if (revealEls.length) {
     const observer = new IntersectionObserver(
